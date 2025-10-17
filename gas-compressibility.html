@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Gas Compressibility (Z Factor)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<!-- Brand fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ===== Brand palette (from logo) ===== */
+  :root{
+    --bg:#0d1119;
+    --panel:#333744;
+    --panel-soft:#2a2f3a;
+    --ink:#eaeaea;
+    --ink-strong:#ffffff;
+    --muted:#8d93a0;
+    --accent:#859eb7;
+    --accent-2:#6d7887;
+    --accent-3:#758ba3;
+    --radius:16px;
+    --shadow:0 6px 22px rgba(0,0,0,.35);
+    --border:rgba(255,255,255,.08);
+  }
+
+  /* ===== Base ===== */
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    color:var(--ink);
+    font:400 16px/1.55 "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: radial-gradient(1100px 650px at 75% -10%, rgba(133,158,183,.16), transparent 60%) var(--bg);
+  }
+
+  a{ color:var(--accent); text-decoration:none; }
+  a:hover{ text-decoration:underline; }
+
+  /* ===== Header with logo ===== */
+  .brandbar{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; padding:18px clamp(16px,4vw,28px);
+    background: var(--panel);
+    border-bottom:1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .brand-left{ display:flex; align-items:center; gap:14px; }
+  .brandbar img{ height:70px; width:auto; filter: drop-shadow(0 4px 10px rgba(0,0,0,.4)); }
+  .brand{
+    display:flex; flex-direction:column; gap:2px;
+  }
+  #title{
+    margin:0; letter-spacing:.5px;
+    color:var(--ink-strong);
+    font-family:"Bebas Neue", sans-serif;
+    font-size: clamp(28px, 4.4vw, 48px);
+    line-height:1;
+  }
+  .subtitle{ color:var(--accent); font-weight:600; font-size:14px; }
+
+  /* Language chooser in header */
+  .lang{
+    display:flex; align-items:center; gap:8px;
+    color:var(--muted); font-size:14px; white-space:nowrap;
+  }
+  #lang{
+    background:#242833; color:var(--ink);
+    border:1px solid var(--border);
+    border-radius:10px; padding:8px 10px;
+  }
+
+  /* ===== Main container ===== */
+  .wrap{
+    max-width: 980px;
+    margin: 28px auto 56px;
+    padding: 0 clamp(12px, 4vw, 24px);
+  }
+
+  /* Panel-like fieldsets */
+  fieldset{
+    border:1px solid var(--border);
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0)) var(--panel);
+    border-radius: var(--radius);
+    padding:18px;
+    margin:0 0 16px;
+    box-shadow: var(--shadow);
+  }
+  legend{
+    padding:0 6px;
+    color:var(--ink-strong);
+  }
+
+  /* Typography + helper classes kept from original, but themed */
+  h1{ margin:0 0 12px; } /* kept for JS but visually handled in header */
+  .muted{ color:var(--muted); font-size:.95rem; }
+  .explain{
+    background: var(--panel-soft);
+    border:1px solid var(--border);
+    padding:12px;
+    border-radius: 12px;
+  }
+  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  /* Rows */
+  .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+
+  /* Inputs */
+  label{ display:block; margin:8px 0 6px; }
+  input[type="number"]{
+    width: 180px; padding:10px;
+    background:#242833; color:var(--ink);
+    border:1px solid var(--border); border-radius:12px;
+    outline:none;
+  }
+  input[type="number"]:focus{
+    border-color:var(--accent-3);
+    box-shadow:0 0 0 4px rgba(133,158,183,.18);
+  }
+
+  /* Preset buttons → pills */
+  button{
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    color:#0b0f16; font-weight:700;
+    border:none; border-radius:999px; padding:10px 14px; cursor:pointer;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.15), 0 4px 12px rgba(0,0,0,.25);
+    transition: background .2s ease, transform .06s ease;
+  }
+  button:hover{ background: linear-gradient(180deg, var(--accent-3), var(--accent)); }
+  button:active{ transform: translateY(1px); }
+
+  /* Results cards */
+  .result{
+    font-size:1.6rem; font-weight:700; min-width: 180px;
+    padding:12px;
+    background: var(--panel-soft);
+    border:1px solid var(--border);
+    border-radius: 12px;
+    color: var(--ink-strong);
+  }
+  .msg{ margin-top:8px; color:#ff6b7e; } /* readable on dark */
+
+  /* Toolbar from original is not used; keep minimal spacing if present */
+  .toolbar{ display:none; }
+
+  /* Paragraphs */
+  #intro{ margin: 12px 0 18px; }
+  #attribution{ margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<!-- ===== Header with logo and language selector ===== -->
+<header class="brandbar">
+  <div class="brand-left">
+    <img src="logo.png" alt="Phony Divers logo">
+    <div class="brand">
+      <h1 id="title">Gas Compressibility (Z Factor)</h1>
+      <div class="subtitle">Phony Divers – Gas Tools</div>
+    </div>
+  </div>
+  <label class="lang">
+    <span id="lang-label">Language</span>
+    <select id="lang">
+      <option value="en">English</option>
+      <option value="bg">Български</option>
+    </select>
+  </label>
+</header>
+
+<div class="wrap">
+  <!-- Intro -->
+  <p id="intro" class="muted">
+    This calculator shows how real gas pressure differs slightly from an ideal gas.
+    Enter the pressure (up to 500 bar) and gas mix (O₂ and He). The rest is N₂.
+    The calculations assume a temperature of about <b>27 °C (300 K)</b>.
+  </p>
+
+  <!-- Inputs -->
+  <fieldset>
+    <legend id="inputs-legend"><b>Inputs</b></legend>
+
+    <div class="row">
+      <div>
+        <label id="pressure-label" for="pressure">Pressure (bar)</label>
+        <input id="pressure" type="number" step="1" min="0" max="500" value="200" />
+      </div>
+      <div>
+        <label id="o2-label" for="o2">O₂ (%)</label>
+        <input id="o2" type="number" step="1" min="0" max="100" value="21" />
+      </div>
+      <div>
+        <label id="he-label" for="he">He (%)</label>
+        <input id="he" type="number" step="1" min="0" max="100" value="0" />
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:8px;">
+      <button type="button" id="preset-air">Air 21/0</button>
+      <button type="button" id="preset-ean32">Nx 32</button>
+      <button type="button" id="preset-trimix2135">Trimix 21/35</button>
+      <button type="button" id="preset-trimix1845">Trimix 18/45</button>
+      <button type="button" id="preset-trimix1555">Trimix 15/55</button>
+      <button type="button" id="preset-trimix1265">Trimix 12/65</button>
+    </div>
+
+    <div id="balance" class="muted" style="margin-top:8px;">
+      <span id="n2-label">N₂:</span> <span id="n2">79.0</span>%
+    </div>
+    <div id="error" class="msg" style="display:none;"></div>
+  </fieldset>
+
+  <!-- Results -->
+  <fieldset>
+    <legend id="results-legend"><b>Results</b></legend>
+    <div class="row">
+      <div>
+        <div id="z-label" class="muted" style="margin-bottom:6px;">Z factor</div>
+        <div id="z" class="result">—</div>
+      </div>
+      <div>
+        <div id="pressure-info-label" class="muted" style="margin-bottom:6px;">Pressure info</div>
+        <div class="result" style="font-size:1rem;">
+          <div><span id="actual-pressure-label">Actual pressure</span>: <span id="pOut">—</span> bar</div>
+          <div><span id="gas-mix-label">Gas mix</span>: <span id="mixOut">—</span></div>
+          <div style="margin-top:4px;"><span id="ideal-pressure-label">Ideal gas pressure</span>: <span id="pIdeal">—</span> bar</div>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- Explanation -->
+  <fieldset>
+    <legend id="explain-legend"><b>Explanation</b></legend>
+    <div id="explain" class="explain">
+      <!-- Filled by i18n -->
+    </div>
+  </fieldset>
+
+  <p class="muted" id="attribution">
+    Based on formulas from the
+    <a href="https://subsurface-divelog.org/" target="_blank" rel="noopener noreferrer">Subsurface</a>
+    dive software source code.
+  </p>
+</div>
+
+<!-- ===== Your existing JavaScript (unchanged) ===== -->
+<script>
+  // ---------- Gas model ----------
+  const clamp = (x, lo, hi) => Math.min(Math.max(x, lo), hi);
+  const toPermille = x => (x <= 1 ? x * 1000 : x <= 100 ? x * 10 : x);
+  function virialM1(c, x) { return x*c[0] + x*x*c[1] + x*x*x*c[2]; }
+  function gasCompressibilityFactor(gas, bar) {
+    const O2 = [-7.18092073703e-04, +2.81852572808e-06, -1.50290620492e-09];
+    const N2 = [-2.19260353292e-04, +2.92844845532e-06, -2.07613482075e-09];
+    const He = [+4.87320026468e-04, -8.83632921053e-08, +5.33304543646e-11];
+    const P = clamp(Number(bar)||0, 0, 500); // limit to 0–500 bar
+    const o2p = toPermille(gas.o2);
+    const hep = toPermille(gas.he);
+    const n2p = 1000 - o2p - hep;
+    const Zm1 = virialM1(O2,P)*o2p + virialM1(He,P)*hep + virialM1(N2,P)*n2p;
+    return Zm1*0.001 + 1.0;
+  }
+
+  // ---------- DOM ----------
+  const $p=document.getElementById('pressure'),
+        $o2=document.getElementById('o2'),
+        $he=document.getElementById('he'),
+        $z=document.getElementById('z'),
+        $pOut=document.getElementById('pOut'),
+        $mixOut=document.getElementById('mixOut'),
+        $pIdeal=document.getElementById('pIdeal'),
+        $n2=document.getElementById('n2'),
+        $err=document.getElementById('error'),
+        $bal=document.getElementById('balance');
+
+  function showError(msg){
+    $err.style.display=''; $err.textContent=msg; $bal.style.display='none';
+    $z.textContent='—'; $pOut.textContent='—'; $mixOut.textContent='—'; $pIdeal.textContent='—';
+  }
+
+  function update(){
+    let p=Number($p.value);
+    if(p>500){ p=500; $p.value=500; }
+    if(p<0){ p=0; $p.value=0; }
+    const o2=Number($o2.value), he=Number($he.value);
+    if(!Number.isFinite(p)) return showError(t.err.pressureRange);
+    if(!Number.isFinite(o2)||o2<0||o2>100) return showError(t.err.o2range);
+    if(!Number.isFinite(he)||he<0||he>100) return showError(t.err.herange);
+    const n2pct=100-o2-he;
+    if(n2pct<-1e-9) return showError(t.err.sum);
+
+    $err.style.display='none'; $bal.style.display='';
+    $n2.textContent=Math.max(0,n2pct).toFixed(1);
+
+    const Z=gasCompressibilityFactor({o2,he},p);
+    const pIdeal = p / Z;
+
+    $z.textContent=Z.toFixed(6);
+    $pOut.textContent=p.toFixed(1);
+    $mixOut.textContent=`${o2.toFixed(1)}% / ${he.toFixed(1)}% / ${Math.max(0,n2pct).toFixed(1)}%`;
+    $pIdeal.textContent=pIdeal.toFixed(2);
+
+    // Update example line inside explanation (if present)
+    const exZ = document.getElementById('exZ');
+    const exPreal = document.getElementById('exPreal');
+    const exPideal = document.getElementById('exPideal');
+    if (exZ) exZ.textContent = Z.toFixed(6);
+    if (exPreal) exPreal.textContent = p.toFixed(2);
+    if (exPideal) exPideal.textContent = pIdeal.toFixed(2);
+  }
+
+  function setPreset(o2,he){ $o2.value=o2; $he.value=he; update(); }
+
+  document.getElementById('preset-air').onclick=()=>setPreset(21,0);
+  document.getElementById('preset-ean32').onclick=()=>setPreset(32,0);
+  document.getElementById('preset-trimix2135').onclick=()=>setPreset(21,35);
+  document.getElementById('preset-trimix1845').onclick=()=>setPreset(18,45);
+  document.getElementById('preset-trimix1555').onclick=()=>setPreset(15,55);
+  document.getElementById('preset-trimix1265').onclick=()=>setPreset(12,65);
+
+  [$p,$o2,$he].forEach(el=>{el.addEventListener('input',update);el.addEventListener('change',update);});
+
+  // ---------- i18n (EN/BG) ----------
+  const i18n = {
+    en: {
+      pageTitle: "Gas Compressibility (Z Factor)",
+      langLabel: "Language",
+      intro: `This calculator shows how real gas pressure differs slightly from an ideal gas.
+        Enter the pressure (up to 500 bar) and gas mix (O₂ and He). The rest is N₂.
+        The calculations assume a temperature of about <b>27 °C (300 K)</b>.`,
+      inputsLegend: "Inputs",
+      pressureLabel: "Pressure (bar)",
+      o2Label: "O₂ (%)",
+      heLabel: "He (%)",
+      btnAir: "Air 21/0",
+      btnNx32: "Nx 32",
+      btnTx2135: "Trimix 21/35",
+      btnTx1845: "Trimix 18/45",
+      btnTx1555: "Trimix 15/55",
+      btnTx1265: "Trimix 12/65",
+      n2Label: "N₂:",
+      resultsLegend: "Results",
+      zLabel: "Z factor",
+      pressureInfoLabel: "Pressure info",
+      actualPressureLabel: "Actual pressure",
+      gasMixLabel: "Gas mix",
+      idealPressureLabel: "Ideal gas pressure",
+      explainLegend: "Explanation",
+      explainHTML: `
+        <p><b>What is Z?</b><br>
+        The <b>Z factor</b> shows how much a real gas deviates from the ideal gas law.</p>
+        <ul>
+          <li><b>Z = 1</b> → behaves like an ideal gas</li>
+          <li><b>Z &gt; 1</b> → slightly harder to compress</li>
+          <li><b>Z &lt; 1</b> → slightly easier to compress</li>
+        </ul>
+        <p>The “ideal gas pressure” is what the pressure <i>would be</i> if the gas were ideal, using
+        <span class="mono">P<sub>ideal</sub> = P<sub>real</sub> / Z</span>.</p>
+        <p><b>Example (your inputs):</b></p>
+        <p class="mono">Z = <span id="exZ">—</span> P = <span id="exPreal">—</span> bar → Ideal P = <span id="exPideal">—</span> bar</p>
+      `,
+      attributionHTML: `Based on formulas from the
+        <a href="https://subsurface-divelog.org/" target="_blank" rel="noopener noreferrer">Subsurface</a>
+        dive software source code.`,
+      err: {
+        pressureRange: "Pressure must be between 0 and 500 bar.",
+        o2range: "O₂ must be 0–100%.",
+        herange: "He must be 0–100%.",
+        sum: "O₂ + He exceeds 100%."
+      }
+    },
+    bg: {
+      pageTitle: "Компресируемост на газа (Z фактор)",
+      langLabel: "Език",
+      intro: `Този калкулатор показва колко реалното налягане се различава от идеалния газ.
+        Въведете налягане (до 500 bar) и газова смес (O₂ и He). Останалото е N₂.
+        Изчисленията приемат температура около <b>27 °C (300 K)</b>.`,
+      inputsLegend: "Входни данни",
+      pressureLabel: "Налягане (bar)",
+      o2Label: "O₂ (%)",
+      heLabel: "He (%)",
+      btnAir: "Въздух 21/0",
+      btnNx32: "Найтрокс 32",
+      btnTx2135: "Тримикс 21/35",
+      btnTx1845: "Тримикс 18/45",
+      btnTx1555: "Тримикс 15/55",
+      btnTx1265: "Тримикс 12/65",
+      n2Label: "N₂:",
+      resultsLegend: "Резултати",
+      zLabel: "Z фактор",
+      pressureInfoLabel: "Информация за налягането",
+      actualPressureLabel: "Реално налягане",
+      gasMixLabel: "Газова смес",
+      idealPressureLabel: "Идеално газово налягане",
+      explainLegend: "Обяснение",
+      explainHTML: `
+        <p><b>Какво е Z?</b><br>
+        <b>Z факторът</b> показва доколко реалният газ се отклонява от закона за идеалния газ.</p>
+        <ul>
+          <li><b>Z = 1</b> → държи се като идеален газ</li>
+          <li><b>Z &gt; 1</b> → леко по-трудно се компресира</li>
+          <li><b>Z &lt; 1</b> → компресира се по-лесно</li>
+        </ul>
+        <p>„Идеалното налягане“ е колко би било налягането, ако газът беше идеален:
+        <span class="mono">P<sub>идеал</sub> = P<sub>реал</sub> / Z</span>.</p>
+        <p><b>Пример (текущите стойности):</b></p>
+        <p class="mono">Z = <span id="exZ">—</span> P = <span id="exPreal">—</span> bar → Идеално P = <span id="exPideal">—</span> bar</p>
+      `,
+      attributionHTML: `Базирано на формули от изходния код на
+        <a href="https://subsurface-divelog.org/" target="_blank" rel="noopener noreferrer">Subsurface</a>`,
+      err: {
+        pressureRange: "Налягането трябва да е между 0 и 500 bar.",
+        o2range: "O₂ трябва да е 0–100%.",
+        herange: "He трябва да е 0–100%.",
+        sum: "O₂ + He надвишава 100%."
+      }
+    }
+  };
+
+  let t = i18n.en; // active translation
+
+  function setLang(lang) {
+    t = i18n[lang] || i18n.en;
+    document.documentElement.lang = lang;
+    document.title = t.pageTitle;
+    document.getElementById('title').textContent = t.pageTitle;
+    document.getElementById('lang-label').textContent = t.langLabel;
+    document.getElementById('intro').innerHTML = t.intro;
+
+    document.getElementById('inputs-legend').innerHTML = `<b>${t.inputsLegend}</b>`;
+    document.getElementById('pressure-label').textContent = t.pressureLabel;
+    document.getElementById('o2-label').textContent = t.o2Label;
+    document.getElementById('he-label').textContent = t.heLabel;
+
+    document.getElementById('preset-air').textContent = t.btnAir;
+    document.getElementById('preset-ean32').textContent = t.btnNx32;
+    document.getElementById('preset-trimix2135').textContent = t.btnTx2135;
+    document.getElementById('preset-trimix1845').textContent = t.btnTx1845;
+    document.getElementById('preset-trimix1555').textContent = t.btnTx1555;
+    document.getElementById('preset-trimix1265').textContent = t.btnTx1265;
+
+    document.getElementById('n2-label').textContent = t.n2Label;
+
+    document.getElementById('results-legend').innerHTML = `<b>${t.resultsLegend}</b>`;
+    document.getElementById('z-label').textContent = t.zLabel;
+    document.getElementById('pressure-info-label').textContent = t.pressureInfoLabel;
+    document.getElementById('actual-pressure-label').textContent = t.actualPressureLabel;
+    document.getElementById('gas-mix-label').textContent = t.gasMixLabel;
+    document.getElementById('ideal-pressure-label').textContent = t.idealPressureLabel;
+
+    document.getElementById('explain-legend').innerHTML = `<b>${t.explainLegend}</b>`;
+    document.getElementById('explain').innerHTML = t.explainHTML;
+
+    document.getElementById('attribution').innerHTML = t.attributionHTML;
+
+    localStorage.setItem('gasZ.lang', lang);
+    update(); // refresh example numbers in explanation
+  }
+
+  const $lang = document.getElementById('lang');
+  $lang.addEventListener('change', e => setLang(e.target.value));
+
+  // Initialize language (saved or browser default)
+  const saved = localStorage.getItem('gasZ.lang');
+  const preferred = saved || (navigator.language && navigator.language.startsWith('bg') ? 'bg' : 'en');
+  $lang.value = preferred;
+  setLang(preferred);
+
+  // Initial calculation
+  update();
+</script>
+</body>
+</html>
